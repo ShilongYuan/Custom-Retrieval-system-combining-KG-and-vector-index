@@ -41,6 +41,10 @@ def load_json_data(data_path):
         all_data.append(doc)
         #all_data += doc
     return all_data
+def save_config(args):
+    path = args.output_dir+'/config.json'
+    with open(path, 'w') as config_file:
+        json.dump(args.__dict__, config_file, indent=2)
 
 class Index_Builder:
     def __init__(
@@ -161,7 +165,9 @@ class Index_Builder:
         index.upsert(vectors=docs,batch_size=100)
             
         print("Finish building index.")
+        save_config(args)
 
+    
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--task_name', type=str, help="The name your index to store in pinecone")
@@ -171,10 +177,12 @@ if __name__=="__main__":
     parser.add_argument('--language',default='zh')
     parser.add_argument('--output_dir',type=str)
     parser.add_argument('--tem_type',type=str,default='train')
+    parser.add_argument('--url_list',type=str,help='id and url json file')
     args = parser.parse_args()
     index_builder = Index_Builder(task_name=args.task_name,
                                   data_dir=args.data_dir,
                                   cuda_id=args.cuda_id,
-                                  batch_size=args.batch_size,                           
+                                  batch_size=args.batch_size, 
+                                  url_list=args.url_list                          
                                   )
     index_builder.construct_index()

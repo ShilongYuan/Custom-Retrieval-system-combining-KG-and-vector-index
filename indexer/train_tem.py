@@ -49,6 +49,7 @@ def main():
     )
     trainer.train()
     if is_main_process(training_args.local_rank):
-        trainer.save_model()
+        path = training_args.output_dir
+        trainer.save_model(path)
 if __name__ == "__main__":
     main()
