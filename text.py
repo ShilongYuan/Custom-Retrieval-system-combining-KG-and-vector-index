@@ -6,7 +6,7 @@ loader = WebBaseLoader("https://www.nju.edu.cn")
 
 data = loader.load()
 # embeddings = HuggingFaceEmbeddings()
-print(data[0].dict())
+print(data)
 # data = data[0].dict()['page_content']
 # doc_result = embeddings.embed_documents([data])
 # print(doc_result)

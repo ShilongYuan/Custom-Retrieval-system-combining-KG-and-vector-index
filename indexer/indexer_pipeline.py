@@ -1,11 +1,21 @@
 import os
-import logging
+from llama_index.graph_stores import NebulaGraphStore
+from llama_index.storage.storage_context import StorageContext
+from llama_index import KnowledgeGraphIndex,
+from llama_index import SimpleWebPageReader,Document
+from llama_index.vector_stores import PineconeVectorStore
+space_name = "graphindex"
 import argparse
 import runhouse as rh
 gpu = rh.cluster(name="rh-a10x", instance_type="A100:1", use_spot=False)
 import getpass
 os.environ["PINECONE_API_KEY"] = getpass.getpass("Pinecone API Key:")
 os.environ["PINECONE_ENV"] = getpass.getpass("Pinecone Environment:")
+os.environ["NEBULA_USER"] = getpass.getpass("Nebula user:")
+os.environ["NEBULA_PASSWORD"] = getpass.getpass("Passward:")
+os.environ[
+    "NEBULA_ADDRESS"
+] = getpass.getpass("Address like: 127.0.0.1:9669:")
 import os
 import json
 import openai
@@ -106,7 +116,40 @@ class Index_Builder:
                             "--optim", "adamw_torch"]
         subprocess.run(["torchrun"] + training_args)
         return tem_save_path
-    def construct_index(self):
+    def construct_graph(self):
+        if self.load_by_web_loader:
+            urls = []
+            with open(self.url_list) as f:
+                for line in f:
+                    url = line.strip().split(' ')[1]
+                    urls.append(url)
+            web_data = []
+            for i in urls:    
+                web = SimpleWebPageReader(html_to_text=True).load_data(i)
+                web_data.append(web[0])
+        else:
+            self.json_web = load_json_data(self.data_dir)
+            web_data = [Document(item) for item in self.json_web]
+            doc_title = [item['title'] for item in self.json_web]    
+        graph_store = NebulaGraphStore(
+        space_name=space_name,
+        # edge_types=edge_types,
+        # rel_prop_names=rel_prop_names,
+        # tags=tags,
+        )    
+        storage_context = StorageContext.from_defaults(graph_store=graph_store)
+        kg_index = KnowledgeGraphIndex.from_documents(
+            web_data,
+            storage_context=storage_context,
+            max_triplets_per_chunk=10,
+            space_name=space_name,
+            # edge_types=edge_types,
+            # rel_prop_names=rel_prop_names,
+            # tags=tags,
+            include_embeddings=True,
+        )
+        kg_index.storage_context.persist(persist_dir=self.output_dir)
+    def construct_vector_index(self):
         index_save_path = self.output_dir+'/tem.index'
         #load data
         if self.load_by_web_loader:
@@ -163,10 +206,10 @@ class Index_Builder:
         index = pinecone.Index("quickstart")
         
         index.upsert(vectors=docs,batch_size=100)
-            
-        print("Finish building index.")
+        
+        print("Finish building vector index.")
         save_config(args)
-
+        
     
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
@@ -185,4 +228,5 @@ if __name__=="__main__":
                                   batch_size=args.batch_size, 
                                   url_list=args.url_list                          
                                   )
-    index_builder.construct_index()
+    index_builder.construct_vector_index()
+    index_builder.construct_graph()

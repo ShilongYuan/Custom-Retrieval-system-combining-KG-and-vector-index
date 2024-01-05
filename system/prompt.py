@@ -1,5 +1,9 @@
 
 
+answer_generation_template_en = 'Now, entirely based on the following reference, please answer the query more succinctly and professionally. The reference is delimited by triple brackets [[[]]]. The query is delimited by triple parentheses ((())). You are not allowed to add fabrications to your answers. Please answer in Chinese. Reference: [[[{context}]]], query: ((({question}))), answer:'#answer generation instruction 
+answer_generation_template_zh = '现在，请完全的基于用书名号分割《》的参考信息，简洁和专业的来回答引号“”分割的用户的问题。不允许在答案中添加编造成分，答案请使用中文。参考信息:《{context}》 问题:“{question}”' #answer generation instruction
+answer_generation_template = answer_generation_template_en
+
 global_template = "The following is a conversation between a human and an AI assistant.The AI assistant gives helpful, detailed, and polite answers to the user's questions.\n[|Human|]:{input}\n[|AI|]:"
 
 request_rewriting_template_en = 'Your job now, as the senior linguistician, is to understand what the user is really trying to say. In the course of a conversation with you, the user makes a series of requests that are coherent, but the requests themselves may not be complete and clear because the subject or pronoun or other parts of one request may be missing and appear in the previous requests and proofread it. Therefore, it is now up to you to complete the user current question request by understanding historical request. The user historical requests were :{history}, and the user current request is : {request}. Please rewrite the user current request so that its meaning is complete and clear. Finally, only a rewritten request is printed, without any additional explanation or intermediate process. Please output in Chinese. The rewritten request is:'#passage extraction instructions
